@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ASP TRONICS - Professional Billing System</title>
+
+  <!-- External Libraries (same as original) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+  <!-- Your separated CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+ RD PROTECTION ==========
+function startDeleteInvoice(invoiceId) {
+    localStorage.setItem('pendingDeleteAction', 'invoice');
+    localStorage.setItem('pendingDeleteId', invoiceId);
+    showDeletePasswordModal();
+}
+<div class="header">
+    <div class="header-content">
+      <div class="company-brand">
+        <div class="logo-container">
+          <div class="logo-placeholder" id="companyLogo">AS</div>
+        </div>
+        <div class="company-info">
+          <h1>ASP TRONICS</h1>
+          <div class="tagline">Professional Billing & Inventory Management System</div>
+        </div>
+      </div>
+      <div class="right" id="topControls">
+        <!-- Language Selector -->
+        <div class="language-selector">
+          <i class="fas fa-globe"></i>
+          <select id="languageSelect" onchange="changeLanguage()">
+            <option value="hi">हिंदी</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <span style="color: rgba(255,255,255,0.9); font-size: 13px; margin-left: 10px;">ASP TRONICS v1.0.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Section -->
+  <div id="loginSection" class="login-card">
+    <h2><i class="fas fa-lock"></i> <span data-lang="hi">बिलिंग सिस्टम में लॉगिन करें</span><span data-lang="en">Login to Billing System</span></h2>
+    <div class="form-group">
+      <input type="text" id="loginUsername" placeholder="" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <input type="password" id="loginPassword" placeholder="">
+    </div>
+    <div style="margin-bottom: 15px; color: #666; font-size: 13px; text-align: center; padding: 8px; background: #f5f5f5; border-radius: var(--radius);">
+      <span data-lang="hi">डिफॉल्ट एडमिन लॉगिन:</span><span data-lang="en">Default Admin Login:</span><br>
+      <b>Username:</b> <code>admin</code> | <b>Password:</b> <code>admin123</code>
+    </div>
+    <div class="login-buttons">
+      <button class="btn btn-primary" onclick="login()">
+        <i class="fas fa-sign-in-alt"></i> <span data-lang="hi">लॉगिन</span><span data-lang="en">Login</span>
+      </button>
+      <button class="btn btn-warning" onclick="quickAdminLogin()">
+        <i class="fas fa-user-shield"></i> <span data-lang="hi">एडमिन लॉगिन</span><span data-lang="en">Admin Login</span>
+      </button>
+    </div>
+    <div style="margin-top: 10px; color: #888; font-size: 12px; text-align: center;">
+      ASP TRONICS v1.0.0<br>
+      <span data-lang="hi">नए यूजर एडमिन द्वारा बनाए जाएंगे</span><span data-lang="en">New users will be created by admin</span>
+    </div>
+  </div>
+
+  <!-- Main Application -->
+  <div id="appContent" class="app-content">
+    <!-- User Info Bar -->
+    <div class="user-bar">
+      <div class="user-info">
+        <div>
+          <strong data-lang="hi">यूजर:</strong><strong data-lang="en">User:</strong> <span id="currentUsername"></span>
+          <span style="margin-left: 10px; color: #666; font-size: 13px;" id="userRole"></span>
+        </div>
+        <button class="btn btn-small btn-warning" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> <span data-lang="hi">लॉगआउट</span><span data-lang="en">Logout</span>
+        </button>
+      </div>
+      <div>
+        <button class="btn btn-small btn-primary" onclick="showCompanySettings()">
+          <i class="fas fa-cog"></i> <span data-lang="hi">सेटिंग्स</span><span data-lang="en">Settings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('dashboard')">
+        <i class="fas fa-tachometer-alt"></i> <span data-lang="hi">डैशबोर्ड</span><span data-lang="en">Dashboard</span>
+      </div>
+      <div class="tab" onclick="switchTab('company')">
+        <i class="fas fa-building"></i> <span data-lang="hi">कंपनी सेटअप</span><span data-lang="en">Company Setup</span>
+      </div>
+      <div class="tab" onclick="switchTab('productsCustomers')">
+        <i class="fas fa-box"></i> <i class="fas fa-users"></i> <span data-lang="hi">प्रोडक्ट्स और कस्टमर्स</span><span data-lang="en">Products & Customers</span>
+      </div>
+      <div class="tab" onclick="switchTab('createInvoice')">
+        <i class="fas fa-file-invoice"></i> <span data-lang="hi">इनवॉइस बनाएं</span><span data-lang="en">Create Invoice</span>
+      </div>
+      <div class="tab" onclick="switchTab('invoiceHistory')">
+        <i class="fas fa-history"></i> <span data-lang="hi">इनवॉइस हिस्ट्री</span><span data-lang="en">Invoice History</span>
+      </div>
+      <div class="tab" id="adminTab" style="display: none;" onclick="switchTab('admin')">
+        <i class="fas fa-user-shield"></i> <span data-lang="hi">एडमिन</span><span data-lang="en">Admin</span>
+      </div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboard" class="tab-content active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <i class="fas fa-file-invoice-dollar" style="color: var(--primary); font-size: 22px;"></i>
+          <div class="stat-value" id="totalInvoices">0</div>
+          <div class="stat-label" data-lang="hi">आज की इनवॉइस</div>
+          <div class="stat-label" data-lang="en">Today's Invoices</div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-rupee-sign" style="color: var(--success); font-size: 22px;"></i>
+          <div class="stat-value" id="totalRevenue">₹0</div>
+          <div class="stat-label" data-lang="hi">आज की आमदनी</div>
+          <div class="stat-label" data-lang="en">Today's Revenue</div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-users" style="color: var(--info); font-size: 22px;"></i>
+          <div class="stat-value" id="totalCustomers">0</div>
+          <div class="stat-label" data-lang="hi">आज के कस्टमर्स</div>
+          <div class="stat-label" data-lang="en">Today's Customers</div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-boxes" style="color: var(--warning); font-size: 22px;"></i>
+          <div class="stat-value" id="totalProducts">0</div>
+          <div class="stat-label" data-lang="hi">आज के प्रोडक्ट्स</div>
+          <div class="stat-label" data-lang="en">Today's Products</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><i class="fas fa-bolt"></i> <span data-lang="hi">क्विक एक्शन्स</span><span data-lang="en">Quick Actions</span></h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="switchTab('createInvoice')">
+            <i class="fas fa-plus-circle"></i> <span data-lang="hi">नया इनवॉइस</span><span data-lang="en">New Invoice</span>
+          </button>
+          <button class="btn btn-success" onclick="switchTab('productsCustomers')">
+            <i class="fas fa-box"></i> <i class="fas fa-user-plus"></i> <span data-lang="hi">प्रोडक्ट/कस्टमर जोड़ें</span><span data-lang="en">Add Product/Customer</span>
+          </button>
+          <button class="btn btn-warning" onclick="printTodayReport()">
+            <i class="fas fa-print"></i> <span data-lang="hi">आज की रिपोर्ट</span><span data-lang="en">Today's Report</span>
+          </button>
+          <button class="btn btn-info" onclick="downloadBackup()">
+            <i class="fas fa-download"></i> <span data-lang="hi">डाटा बैकअप</span><span data-lang="en">Backup Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reports Section -->
+      <div class="card">
+        <h3 onclick="toggleReports()" style="cursor:pointer;">
+          <i class="fas fa-chart-bar"></i> <span data-lang="hi">रिपोर्ट्स और एनालिटिक्स</span><span data-lang="en">Reports & Analytics</span>
+          <i class="fas fa-chevron-down" id="reports-chevron"></i>
+        </h3>
+        <div id="reports-container" style="display: none;">
+          <div class="form-row">
+            <div>
+              <label data-lang="hi">से तारीख</label>
+              <label data-lang="en">From Date</label>
+              <input type="date" id="reportFromDate" style="padding: 10px;">
+            </div>
+            <div>
+              <label data-lang="hi">तक तारीख</label>
+              <label data-lang="en">To Date</label>
+              <input type="date" id="reportToDate" style="padding: 10px;">
+            </div>
+            <div>
+              <label data-lang="hi">रिपोर्ट टाइप</label>
+              <label data-lang="en">Report Type</label>
+              <select id="reportType" style="padding: 10px;">
+                <option value="sales" data-lang="hi">सेल्स रिपोर्ट</option>
+                <option value="sales" data-lang="en">Sales Report</option>
+                <option value="payment" data-lang="hi">पेमेंट रिपोर्ट</option>
+                <option value="payment" data-lang="en">Payment Report</option>
+                <option value="customer" data-lang="hi">कस्टमर रिपोर्ट</option>
+                <option value="customer" data-lang="en">Customer Report</option>
+                <option value="product" data-lang="hi">प्रोडक्ट सेल्स</option>
+                <option value="product" data-lang="en">Product Sales</option>
+                <option value="stock" data-lang="hi">स्टॉक रिपोर्ट</option>
+                <option value="stock" data-lang="en">Stock Report</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="generateReport()">
+              <i class="fas fa-chart-line"></i> <span data-lang="hi">रिपोर्ट जनरेट करें</span><span data-lang="en">Generate Report</span>
+            </button>
+            <button class="btn btn-success" onclick="exportReport()">
+              <i class="fas fa-download"></i> <span data-lang="hi">Excel एक्सपोर्ट</span><span data-lang="en">Export Excel</span>
+            </button>
+            <button class="btn btn-pdf" onclick="exportReportPDF()">
+              <i class="fas fa-file-pdf"></i> <span data-lang="hi">PDF एक्सपोर्ट</span><span data-lang="en">Export PDF</span>
+            </button>
+            <button class="btn btn-warning" onclick="printReport()">
+              <i class="fas fa-print"></i> <span data-lang="hi">रिपोर्ट प्रिंट</span><span data-lang="en">Print Report</span>
+            </button>
+            <button class="btn btn-whatsapp" onclick="shareReport()">
+              <i class="fab fa-whatsapp"></i> <span data-lang="hi">शेयर</span><span data-lang="en">Share</span>
+            </button>
+          </div>
+
+          <div id="reportResults" style="margin-top: 20px; font-size: 13px;">
+            <!-- Report results will be displayed here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Setup Tab -->
+    <div id="company" class="tab-content">
+      <div class="card">
+        <h3><i class="fas fa-building"></i> <span data-lang="hi">कंपनी की जानकारी</span><span data-lang="en">Company Information</span></h3>
+        <div class="logo-upload">
+          <div class="logo-preview" id="logoPreview">
+            <!-- Logo will be displayed here -->
+          </div>
+          <div style="flex: 1;">
+            <div class="form-group">
+              <label data-lang="hi">कंपनी लोगो अपलोड करें</label>
+              <label data-lang="en">Upload Company Logo</label>
+              <input type="file" id="logoUpload" accept="image/*" onchange="uploadLogo()">
+            </div>
+            <button class="btn btn-small btn-warning" onclick="removeLogo()">
+              <i class="fas fa-trash"></i> <span data-lang="hi">लोगो हटाएं</span><span data-lang="en">Remove Logo</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">कंपनी का नाम</label>
+            <label data-lang="en">Company Name</label>
+            <input type="text" id="companyName" value="ASP TRONICS">
+          </div>
+          <div>
+            <label data-lang="hi">फोन नंबर</label>
+            <label data-lang="en">Phone Number</label>
+            <input type="text" id="companyPhone" placeholder="+91 XXXXX XXXXX">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label data-lang="hi">पता</label>
+          <label data-lang="en">Address</label>
+          <textarea id="companyAddress" rows="2" placeholder=""></textarea>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">GST नंबर</label>
+            <label data-lang="en">GST Number</label>
+            <input type="text" id="companyGST" placeholder="">
+          </div>
+          <div>
+            <label data-lang="hi">ईमेल</label>
+            <label data-lang="en">Email</label>
+            <input type="email" id="companyEmail" placeholder="">
+          </div>
+        </div>
+
+        <!-- UPI Payment Section -->
+        <div class="upi-payment-section">
+          <h4><i class="fas fa-qrcode"></i> <span data-lang="hi">UPI पेमेंट सेटअप</span><span data-lang="en">UPI Payment Setup</span></h4>
+          <div class="form-row">
+            <div>
+              <label data-lang="hi">पेमेंट के लिए UPI ID</label>
+              <label data-lang="en">UPI ID for Payments</label>
+              <input type="text" id="companyUPI" placeholder="yourname@upi">
+              <small style="color: #666;" data-lang="hi">जैसे: 9411704071@ybl या name@oksbi</small>
+              <small style="color: #666;" data-lang="en">e.g., 9411704071@ybl or name@oksbi</small>
+            </div>
+            <div>
+              <label data-lang="hi">UPI QR कोड प्रीव्यू</label>
+              <label data-lang="en">UPI QR Code Preview</label>
+              <div class="qr-code-container" id="upiQRPreview">
+                <p style="color: #666; font-size: 12px;" data-lang="hi">UPI ID सेट करें QR जनरेट करने के लिए</p>
+                <p style="color: #666; font-size: 12px;" data-lang="en">Set UPI ID to generate QR</p>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-small btn-success" onclick="generateUPIQRCode()">
+            <i class="fas fa-sync"></i> <span data-lang="hi">QR कोड जनरेट करें</span><span data-lang="en">Generate QR Code</span>
+          </button>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">एडिट/डिलीट के लिए पासवर्ड</label>
+            <label data-lang="en">Password for Edit/Delete</label>
+            <input type="password" id="editPassword" placeholder="" value="9411704071">
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="saveCompanySettings()">
+            <i class="fas fa-save"></i> <span data-lang="hi">कंपनी सेटिंग्स सेव करें</span><span data-lang="en">Save Company Settings</span>
+          </button>
+          <button class="btn btn-warning" onclick="resetCompanySettings()">
+            <i class="fas fa-undo"></i> <span data-lang="hi">डिफॉल्ट रीसेट करें</span><span data-lang="en">Reset to Default</span>
+          </button>
+          <button class="btn btn-info" onclick="downloadCompanyData()">
+            <i class="fas fa-file-pdf"></i> <span data-lang="hi">PDF एक्सपोर्ट करें</span><span data-lang="en">Export as PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combined Products & Customers Tab -->
+    <div id="productsCustomers" class="tab-content">
+      <!-- Customers Section (Top) -->
+      <div class="card" style="margin-bottom: 25px;">
+        <h3><i class="fas fa-users"></i> <span data-lang="hi">कस्टमर मैनेजमेंट</span><span data-lang="en">Customer Management</span></h3>
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">कस्टमर नाम</label>
+            <label data-lang="en">Customer Name</label>
+            <input type="text" id="customerName" placeholder="" required>
+          </div>
+          <div>
+            <label data-lang="hi">फोन नंबर</label>
+            <label data-lang="en">Phone Number</label>
+            <input type="text" id="customerPhone" placeholder="" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">ईमेल (ऑप्शनल)</label>
+            <label data-lang="en">Email (Optional)</label>
+            <input type="email" id="customerEmail" placeholder="">
+          </div>
+          <div>
+            <label data-lang="hi">GST नंबर (ऑप्शनल)</label>
+            <label data-lang="en">GST Number (Optional)</label>
+            <input type="text" id="customerGST" placeholder="">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label data-lang="hi">पता (ऑप्शनल)</label>
+          <label data-lang="en">Address (Optional)</label>
+          <textarea id="customerAddress" rows="2" placeholder=""></textarea>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="addCustomer()">
+            <i class="fas fa-user-plus"></i> <span data-lang="hi">कस्टमर जोड़ें</span><span data-lang="en">Add Customer</span>
+          </button>
+          <button class="btn btn-info" onclick="exportCustomersPDF()">
+            <i class="fas fa-file-pdf"></i> <span data-lang="hi">PDF एक्सपोर्ट करें</span><span data-lang="en">Export as PDF</span>
+          </button>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <input type="text" id="customerSearch" placeholder="" 
+                 style="width: 100%; padding: 10px; font-size: 13px;" oninput="searchCustomers()">
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 15px;">
+          <table class="compact-table">
+            <thead>
+              <tr>
+                <th data-lang="hi">नाम</th>
+                <th data-lang="en">Name</th>
+                <th data-lang="hi">फोन</th>
+                <th data-lang="en">Phone</th>
+                <th data-lang="hi">ईमेल</th>
+                <th data-lang="en">Email</th>
+                <th data-lang="hi">GST</th>
+                <th data-lang="en">GST</th>
+                <th data-lang="hi">एक्शन्स</th>
+                <th data-lang="en">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Products Section (Bottom) -->
+      <div class="card">
+        <h3><i class="fas fa-box"></i> <span data-lang="hi">प्रोडक्ट्स मैनेज करें</span><span data-lang="en">Manage Products</span></h3>
+        
+        <!-- Category Management Section -->
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: var(--radius); border: 1px dashed #ccc;">
+          <h4><i class="fas fa-tags"></i> <span data-lang="hi">कैटेगरी मैनेजमेंट</span><span data-lang="en">Category Management</span></h4>
+          <div class="form-row">
+            <div style="flex: 2;">
+              <input type="text" id="newCategory" list="categoryList" placeholder="नई कैटेगरी जोड़ें या चुनें" style="padding: 10px;">
+              <datalist id="categoryList">
+                <!-- Categories will be loaded dynamically -->
+              </datalist>
+            </div>
+            <div style="flex: 1; display: flex; gap: 10px;">
+              <button class="btn btn-small btn-success" onclick="addNewCategory()" style="flex: 1;">
+                <i class="fas fa-plus"></i> <span data-lang="hi">जोड़ें</span><span data-lang="en">Add</span>
+              </button>
+              <button class="btn btn-small btn-danger" onclick="startDeleteCategory()" style="flex: 1;">
+                <i class="fas fa-trash"></i> <span data-lang="hi">डिलीट</span><span data-lang="en">Delete</span>
+              </button>
+            </div>
+          </div>
+          <div id="categoryListContainer" style="margin-top: 10px; font-size: 12px;">
+            <!-- Existing categories will be listed here -->
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">प्रोडक्ट कोड</label>
+            <label data-lang="en">Product Code</label>
+            <input type="text" id="productCode" placeholder="PROD001" required>
+          </div>
+          <div>
+            <label data-lang="hi">प्रोडक्ट नाम</label>
+            <label data-lang="en">Product Name</label>
+            <input type="text" id="productName" placeholder="" required>
+          </div>
+          <div>
+            <label data-lang="hi">प्रोडक्ट कैटेगरी</label>
+            <label data-lang="en">Product Category</label>
+            <input type="text" id="productCategory" list="categoryList" placeholder="कैटेगरी चुनें या डालें" style="padding: 10px;">
+            <datalist id="categoryList">
+              <!-- Categories will be loaded dynamically -->
+            </datalist>
+          </div>
+          <div>
+            <label data-lang="hi">कीमत (₹)</label>
+            <label data-lang="en">Price (₹)</label>
+            <input type="number" id="productPrice" placeholder="0.00" step="0.01" required>
+          </div>
+          <div>
+            <label data-lang="hi">स्टॉक क्वांटिटी</label>
+            <label data-lang="en">Stock Quantity</label>
+            <input type="number" id="productStock" placeholder="0" step="0.001" required>
+            <small style="color: #666; font-size: 11px;" data-lang="hi">दशमलव में डालें (जैसे 1.5, 1.1, 0.5)</small>
+            <small style="color: #666; font-size: 11px;" data-lang="en">Enter decimal values (e.g., 1.5, 1.1, 0.5)</small>
+          </div>
+        </div>
+        
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="addProduct()">
+            <i class="fas fa-plus"></i> <span data-lang="hi">प्रोडक्ट जोड़ें</span><span data-lang="en">Add Product</span>
+          </button>
+          <button class="btn btn-warning" onclick="clearProductForm()">
+            <i class="fas fa-times"></i> <span data-lang="hi">क्लियर</span><span data-lang="en">Clear</span>
+          </button>
+          <button class="btn btn-info" onclick="exportProductsPDF()">
+            <i class="fas fa-file-pdf"></i> <span data-lang="hi">PDF एक्सपोर्ट करें</span><span data-lang="en">Export as PDF</span>
+          </button>
+          <button class="btn btn-primary" onclick="quickAddMultiple()">
+            <i class="fas fa-bolt"></i> <span data-lang="hi">क्विक एड</span><span data-lang="en">Quick Add</span>
+          </button>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <input type="text" id="productSearch" placeholder="" 
+                 style="width: 100%; padding: 10px; font-size: 13px;" oninput="searchProducts()">
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 15px;">
+          <table class="shrink-table">
+            <thead>
+              <tr>
+                <th width="12%" data-lang="hi">प्रोडक्ट कोड</th>
+                <th width="12%" data-lang="en">Product Code</th>
+                <th width="25%" data-lang="hi">प्रोडक्ट नाम</th>
+                <th width="25%" data-lang="en">Product Name</th>
+                <th width="12%" data-lang="hi">कैटेगरी</th>
+                <th width="12%" data-lang="en">Category</th>
+                <th width="12%" data-lang="hi">कीमत (₹)</th>
+                <th width="12%" data-lang="en">Price (₹)</th>
+                <th width="12%" data-lang="hi">स्टॉक</th>
+                <th width="12%" data-lang="en">Stock</th>
+                <th width="20%" data-lang="hi">एक्शन्स</th>
+                <th width="20%" data-lang="en">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Invoice Tab -->
+    <div id="createInvoice" class="tab-content">
+      <div class="card">
+        <h3><i class="fas fa-file-invoice-dollar"></i> <span data-lang="hi">नया इनवॉइस बनाएं</span><span data-lang="en">Create New Invoice</span></h3>
+        
+        <!-- Invoice ID Field (Visible only when editing) -->
+        <div class="form-row" id="invoiceIdRow" style="display: none;">
+          <div>
+            <label data-lang="hi">इनवॉइस आईडी</label>
+            <label data-lang="en">Invoice ID</label>
+            <input type="text" id="invoiceIdInput" style="padding: 10px;">
+            <small style="color: #666; font-size: 11px;" data-lang="hi">नया इनवॉइस बनाते समय यह फ़ील्ड छुपी रहेगी</small>
+            <small style="color: #666; font-size: 11px;" data-lang="en">This field is hidden when creating new invoice</small>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">कस्टमर चुनें</label>
+            <label data-lang="en">Customer Selection</label>
+            <select id="invoiceCustomerSelect" onchange="loadCustomerDetails()" style="padding: 10px;">
+              <option value="" data-lang="hi">कस्टमर चुनें</option>
+              <option value="" data-lang="en">Select Customer</option>
+            </select>
+            <div style="margin-top: 8px; color: #666; font-size: 12px;" data-lang="hi">
+              या सीधे कस्टमर नाम डालें:
+            </div>
+            <div style="margin-top: 8px; color: #666; font-size: 12px;" data-lang="en">
+              OR Enter customer name directly:
+            </div>
+            <input type="text" id="invoiceCustomerName" placeholder="" 
+                   style="margin-top: 5px; padding: 10px;">
+          </div>
+          <div>
+            <label data-lang="hi">इनवॉइस तारीख</label>
+            <label data-lang="en">Invoice Date</label>
+            <input type="date" id="invoiceDate" style="padding: 10px;">
+          </div>
+        </div>
+
+        <!-- Payment Method and Status -->
+        <div style="margin: 20px 0;">
+          <h4><i class="fas fa-credit-card"></i> <span data-lang="hi">पेमेंट डिटेल्स</span><span data-lang="en">Payment Details</span></h4>
+          <div class="form-row">
+            <div>
+              <label data-lang="hi">पेमेंट मेथड</label>
+              <label data-lang="en">Payment Method</label>
+              <select id="paymentMethod" style="padding: 10px;">
+                <option value="Cash" data-lang="hi">कैश</option>
+                <option value="Cash" data-lang="en">Cash</option>
+                <option value="UPI" data-lang="hi">UPI</option>
+                <option value="UPI" data-lang="en">UPI</option>
+                <option value="Card" data-lang="hi">कार्ड</option>
+                <option value="Card" data-lang="en">Card</option>
+                <option value="Bank Transfer" data-lang="hi">बैंक ट्रांसफर</option>
+                <option value="Bank Transfer" data-lang="en">Bank Transfer</option>
+                <option value="Cheque" data-lang="hi">चेक</option>
+                <option value="Cheque" data-lang="en">Cheque</option>
+              </select>
+            </div>
+            <div>
+              <label data-lang="hi">पेमेंट स्टेटस</label>
+              <label data-lang="en">Payment Status</label>
+              <div class="payment-status-group">
+                <div class="payment-status active" onclick="setPaymentStatus('paid')">
+                  <input type="radio" name="paymentStatus" id="statusPaid" value="paid" checked>
+                  <label for="statusPaid" data-lang="hi">पेड</label>
+                  <label for="statusPaid" data-lang="en">Paid</label>
+                </div>
+                <div class="payment-status" onclick="setPaymentStatus('partial')">
+                  <input type="radio" name="paymentStatus" id="statusPartial" value="partial">
+                  <label for="statusPartial" data-lang="hi">आंशिक</label>
+                  <label for="statusPartial" data-lang="en">Partial</label>
+                </div>
+                <div class="payment-status" onclick="setPaymentStatus('pending')">
+                  <input type="radio" name="paymentStatus" id="statusPending" value="pending">
+                  <label for="statusPending" data-lang="hi">बकाया</label>
+                  <label for="statusPending" data-lang="en">Pending</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Amount Paid Section -->
+          <div id="amountPaidSection" style="display: none; margin-top: 12px;">
+            <div class="form-row">
+              <div>
+                <label data-lang="hi">पेड रकम (₹)</label>
+                <label data-lang="en">Amount Paid (₹)</label>
+                <input type="number" id="amountPaid" placeholder="0.00" min="0" step="0.01" 
+                       style="padding: 10px;" oninput="updatePaymentSummary()">
+              </div>
+              <div>
+                <label data-lang="hi">बची रकम (₹)</label>
+                <label data-lang="en">Remaining Amount (₹)</label>
+                <input type="number" id="remainingAmount" readonly 
+                       style="background: #f5f5f5; padding: 10px;">
+              </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+              <i class="fas fa-info-circle"></i> <span data-lang="hi">बची रकम के लिए QR कोड जनरेट होगा</span><span data-lang="en">QR Code will be generated for remaining amount</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GST Section -->
+        <div style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: var(--radius);">
+          <h4><i class="fas fa-percentage"></i> <span data-lang="hi">GST सेटिंग्स</span><span data-lang="en">GST Settings</span></h4>
+          <div class="form-row">
+            <div>
+              <label data-lang="hi">GST प्रतिशत (%)</label>
+              <label data-lang="en">GST Percentage (%)</label>
+              <input type="number" id="gstPercent" value="0" min="0" max="100" step="0.01" 
+                     style="padding: 10px;" onchange="calculateInvoice()" oninput="calculateInvoice()">
+              <small style="color: #666; font-size: 11px;" data-lang="hi">0 डालें अगर GST लागू नहीं है</small>
+              <small style="color: #666; font-size: 11px;" data-lang="en">Enter 0 if GST not applicable</small>
+            </div>
+            <div>
+              <label data-lang="hi">GST रकम</label>
+              <label data-lang="en">GST Amount</label>
+              <input type="text" id="gstAmountDisplay" value="₹0.00" readonly 
+                     style="background: #f5f5f5; padding: 10px; font-weight: bold; color: #1a237e;">
+            </div>
+          </div>
+          <button class="btn btn-small btn-primary" onclick="toggleGST()" style="margin-top: 10px;">
+            <i class="fas fa-cog"></i> <span data-lang="hi">GST टॉगल करें</span><span data-lang="en">Toggle GST</span>
+          </button>
+        </div>
+
+        <!-- Add Products to Invoice -->
+        <h4><i class="fas fa-cart-plus"></i> <span data-lang="hi">इनवॉइस में प्रोडक्ट्स जोड़ें</span><span data-lang="en">Add Products to Invoice</span></h4>
+        <div class="form-row">
+          <div style="flex: 2;">
+            <select id="productSelect" style="padding: 10px;" onchange="updateProductDetails()">
+              <option value="" data-lang="hi">प्रोडक्ट चुनें</option>
+              <option value="" data-lang="en">Select Product</option>
+            </select>
+            <div id="productStockInfo" style="margin-top: 5px; font-size: 12px;"></div>
+          </div>
+          <div style="flex: 1;">
+            <input type="number" id="productQuantity" placeholder="मात्रा" min="0.001" step="0.001" value="1" style="padding: 10px;">
+            <small style="color: #666; font-size: 11px;">दशमलव में (जैसे 1.5, 0.5)</small>
+          </div>
+          <div style="flex: 1;">
+            <input type="number" id="productRate" placeholder="दर (₹)" step="0.01" style="padding: 10px;">
+          </div>
+          <div style="flex: 1;">
+            <button class="btn btn-primary" onclick="addToInvoice()" style="width: 100%;">
+              <i class="fas fa-plus"></i> <span data-lang="hi">जोड़ें</span><span data-lang="en">Add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Product Option -->
+        <div class="custom-product-section">
+          <h5><i class="fas fa-plus-circle"></i> <span data-lang="hi">कस्टम प्रोडक्ट जोड़ें</span><span data-lang="en">Add Custom Product</span></h5>
+          <div class="form-row">
+            <div style="flex: 1.5;">
+              <input type="text" id="customProductName" placeholder="प्रोडक्ट नाम" style="padding: 8px;">
+            </div>
+            <div style="flex: 1;">
+              <input type="text" id="customProductCategory" list="categoryList" placeholder="कैटेगरी चुनें" style="padding: 8px;">
+              <datalist id="categoryList">
+                <!-- Categories will be loaded dynamically -->
+              </datalist>
+            </div>
+            <div style="flex: 1;">
+              <input type="number" id="customProductRate" placeholder="दर (₹)" step="0.01" style="padding: 8px;">
+            </div>
+            <div style="flex: 1;">
+              <input type="number" id="customProductQuantity" placeholder="मात्रा" min="0.001" step="0.001" value="1" style="padding: 8px;">
+              <small style="color: #666; font-size: 11px;">दशमलव में (जैसे 1.5, 0.25)</small>
+            </div>
+            <div style="flex: 0.5;">
+              <button class="btn btn-secondary" onclick="addCustomProduct()" style="width: 100%;">
+                <i class="fas fa-plus"></i> <span data-lang="hi">जोड़ें</span><span data-lang="en">Add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- UPI Payment QR Code Section -->
+        <div class="upi-payment-section" id="invoiceUPISection" style="display: none;">
+          <h5><i class="fas fa-qrcode"></i> <span data-lang="hi">UPI पेमेंट QR कोड</span><span data-lang="en">UPI Payment QR Code</span></h5>
+          
+          <!-- UPI ID Input Field -->
+          <div class="form-row" style="margin-bottom: 15px;">
+            <div style="flex: 2;">
+              <label data-lang="hi">इस इनवॉइस के लिए UPI ID (ऑप्शनल)</label>
+              <label data-lang="en">UPI ID for this invoice (Optional)</label>
+              <input type="text" id="invoiceUPIID" placeholder="yourname@upi" 
+                     style="width: 100%; padding: 8px; font-size: 13px;">
+              <small style="color: #666;" data-lang="hi">खाली छोड़ें तो कंपनी UPI ID यूज़ होगी</small>
+              <small style="color: #666;" data-lang="en">Leave empty to use company UPI ID</small>
+            </div>
+            <div style="flex: 1; display: flex; align-items: flex-end;">
+              <button class="btn btn-small btn-primary" onclick="loadCompanyUPI()" 
+                      style="padding: 8px 12px;">
+                <i class="fas fa-sync"></i> <span data-lang="hi">कंपनी UPI यूज़ करें</span><span data-lang="en">Use Company UPI</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="qr-code-container" id="invoiceQRCode">
+            <!-- QR code will be generated here -->
+          </div>
+          <div style="text-align: center; margin-top: 10px;">
+            <button class="btn btn-small btn-primary" onclick="generateInvoiceQRCode()" id="qrCodeButton">
+              <i class="fas fa-qrcode"></i> <span data-lang="hi">पेमेंट QR जनरेट करें</span><span data-lang="en">Generate Payment QR</span>
+            </button>
+            <button class="btn btn-small btn-success" onclick="downloadQRCode()">
+              <i class="fas fa-download"></i> <span data-lang="hi">QR डाउनलोड करें</span><span data-lang="en">Download QR</span>
+            </button>
+            <button class="btn btn-small btn-info" onclick="copyUPIID()">
+              <i class="fas fa-copy"></i> <span data-lang="hi">UPI ID कॉपी करें</span><span data-lang="en">Copy UPI ID</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Invoice Items Table -->
+        <div style="margin-top: 20px; overflow-x: auto;">
+          <table class="invoice-items-table">
+            <thead>
+              <tr>
+                <th width="30%" data-lang="hi">प्रोडक्ट</th>
+                <th width="30%" data-lang="en">Product</th>
+                <th width="12%" data-lang="hi">मात्रा</th>
+                <th width="12%" data-lang="en">Qty</th>
+                <th width="15%" data-lang="hi">दर (₹)</th>
+                <th width="15%" data-lang="en">Rate (₹)</th>
+                <th width="13%" data-lang="hi">कुल (₹)</th>
+                <th width="13%" data-lang="en">Total (₹)</th>
+                <th width="10%" data-lang="hi">कैटेगरी</th>
+                <th width="10%" data-lang="en">Category</th>
+                <th width="8%" data-lang="hi">एक्शन</th>
+                <th width="8%" data-lang="en">Action</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceItems"></tbody>
+          </table>
+        </div>
+
+        <!-- Invoice Summary -->
+        <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: var(--radius);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 16px; color: #555;">
+                <span data-lang="hi">सबटोटल:</span><span data-lang="en">Subtotal:</span> 
+                ₹<span id="invoiceSubtotal">0.00</span>
+              </div>
+              <div style="margin-top: 8px; font-size: 14px; color: #666;">
+                <span data-lang="hi">GST:</span><span data-lang="en">GST:</span> 
+                <span id="gstDisplay">₹0.00 (0%)</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 22px; font-weight: 700; color: var(--primary);">
+                <span data-lang="hi">कुल रकम:</span><span data-lang="en">Grand Total:</span> 
+                ₹<span id="invoiceGrandTotal">0.00</span>
+              </div>
+              <div id="paymentSummary" style="margin-top: 8px; color: #666; font-size: 13px;">
+                <span data-lang="hi">पेमेंट स्टेटस: पेड</span>
+                <span data-lang="en">Payment Status: Paid</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="saveInvoice()">
+            <i class="fas fa-save"></i> <span data-lang="hi">इनवॉइस सेव करें</span><span data-lang="en">Save Invoice</span>
+          </button>
+          <button class="btn btn-primary" onclick="previewInvoice()">
+            <i class="fas fa-eye"></i> <span data-lang="hi">प्रीव्यू</span><span data-lang="en">Preview</span>
+          </button>
+          <button class="btn btn-primary" onclick="switchTab('invoiceHistory')">
+            <i class="fas fa-history"></i> <span data-lang="hi">इनवॉइस हिस्ट्री</span><span data-lang="en">Invoice History</span>
+          </button>
+          <button class="btn btn-info" onclick="generateInvoiceQRCode()" id="qrCodeButton">
+            <i class="fas fa-qrcode"></i> <span data-lang="hi">QR कोड</span><span data-lang="en">QR Code</span>
+          </button>
+          <button class="btn btn-whatsapp" onclick="shareInvoice()">
+            <i class="fab fa-whatsapp"></i> <span data-lang="hi">WhatsApp</span><span data-lang="en">WhatsApp</span>
+          </button>
+          <button class="btn btn-danger" onclick="clearInvoiceForm()">
+            <i class="fas fa-broom"></i> <span data-lang="hi">क्लियर</span><span data-lang="en">Clear</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice History Tab -->
+    <div id="invoiceHistory" class="tab-content">
+      <div class="card">
+        <h3><i class="fas fa-history"></i> <span data-lang="hi">इनवॉइस हिस्ट्री</span><span data-lang="en">Invoice History</span></h3>
+        
+        <!-- Advanced Filter Section -->
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: var(--radius); border: 1px solid #e0e0e0;">
+          <h4><i class="fas fa-filter"></i> <span data-lang="hi">एडवांस्ड फ़िल्टर</span><span data-lang="en">Advanced Filters</span></h4>
+          
+          <div class="form-row">
+            <div style="flex: 1.5;">
+              <label data-lang="hi">सर्च करें</label>
+              <label data-lang="en">Search</label>
+              <input type="text" id="historySearch" placeholder="इनवॉइस ID, कस्टमर नाम या फोन नंबर..." 
+                     style="width: 100%; padding: 10px; font-size: 13px;">
+            </div>
+            <div style="flex: 1;">
+              <label data-lang="hi">पेमेंट स्टेटस</label>
+              <label data-lang="en">Payment Status</label>
+              <select id="historyPaymentStatus" style="padding: 10px; width: 100%;">
+                <option value="">सभी स्टेटस</option>
+                <option value="paid">पेड</option>
+                <option value="partial">आंशिक</option>
+                <option value="pending">बकाया</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label data-lang="hi">कैटेगरी</label>
+              <label data-lang="en">Category</label>
+              <select id="historyCategory" style="padding: 10px; width: 100%;">
+                <option value="">सभी कैटेगरी</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row" style="margin-top: 10px;">
+            <div style="flex: 1;">
+              <label data-lang="hi">समय अवधि</label>
+              <label data-lang="en">Time Period</label>
+              <select id="historyTimePeriod" style="padding: 10px; width: 100%;" onchange="handleTimePeriodChange()">
+                <option value="custom">कस्टम डेट</option>
+                <option value="today">आज</option>
+                <option value="yesterday">कल</option>
+                <option value="week">इस हफ्ते</option>
+                <option value="last_week">पिछले हफ्ते</option>
+                <option value="month">इस महीने</option>
+                <option value="last_month">पिछले महीने</option>
+                <option value="quarter">इस तिमाही</option>
+                <option value="last_quarter">पिछली तिमाही</option>
+                <option value="year">इस साल</option>
+                <option value="last_year">पिछले साल</option>
+                <option value="all_time">सभी समय</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label data-lang="hi">से तारीख</label>
+              <label data-lang="en">From Date</label>
+              <input type="date" id="historyFromDate" style="padding: 10px; width: 100%;" onchange="updateTimePeriodToCustom()">
+            </div>
+            <div style="flex: 1;">
+              <label data-lang="hi">तक तारीख</label>
+              <label data-lang="en">To Date</label>
+              <input type="date" id="historyToDate" style="padding: 10px; width: 100%;" onchange="updateTimePeriodToCustom()">
+            </div>
+          </div>
+          
+          <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="applyInvoiceFilters()">
+              <i class="fas fa-search"></i> <span data-lang="hi">फ़िल्टर लगाएं</span><span data-lang="en">Apply Filters</span>
+            </button>
+            <button class="btn btn-warning" onclick="resetInvoiceFilters()">
+              <i class="fas fa-redo"></i> <span data-lang="hi">रीसेट करें</span><span data-lang="en">Reset Filters</span>
+            </button>
+            <button class="btn btn-success" onclick="exportFilteredInvoicesExcel()">
+              <i class="fas fa-file-excel"></i> <span data-lang="hi">एक्सपोर्ट एक्सेल</span><span data-lang="en">Export Excel</span>
+            </button>
+            <button class="btn btn-pdf" onclick="exportFilteredInvoicesPDF()">
+              <i class="fas fa-file-pdf"></i> <span data-lang="hi">एक्सपोर्ट PDF</span><span data-lang="en">Export PDF</span>
+            </button>
+            <button class="btn btn-info" onclick="printFilteredInvoices()">
+              <i class="fas fa-print"></i> <span data-lang="hi">प्रिंट रिपोर्ट</span><span data-lang="en">Print Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Password Protection for Edit/Delete -->
+        <div id="editPasswordPrompt" class="password-protection">
+          <h4><i class="fas fa-lock"></i> <span data-lang="hi">पासवर्ड जरूरी</span><span data-lang="en">Password Required</span></h4>
+          <p data-lang="hi">इनवॉइस एडिट या डिलीट करने के लिए पासवर्ड डालें:</p>
+          <p data-lang="en">To edit or delete an invoice, please enter the edit password:</p>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <input type="password" id="editInvoicePassword" placeholder="" 
+                   style="flex: 1; padding: 8px; font-size: 13px;">
+            <button class="btn btn-primary" onclick="verifyEditPassword()" style="padding: 8px 15px;">
+              <i class="fas fa-check"></i> <span data-lang="hi">वेरीफाई</span><span data-lang="en">Verify</span>
+            </button>
+            <button class="btn btn-warning" onclick="cancelEdit()" style="padding: 8px 15px;">
+              <i class="fas fa-times"></i> <span data-lang="hi">कैंसल</span><span data-lang="en">Cancel</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Invoice Summary Stats -->
+        <div id="invoiceSummaryStats" style="margin: 15px 0; display: none;">
+          <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+            <div class="stat-card">
+              <i class="fas fa-file-invoice" style="color: var(--primary); font-size: 18px;"></i>
+              <div class="stat-value" id="filteredInvoiceCount">0</div>
+              <div class="stat-label" data-lang="hi">इनवॉइस</div>
+              <div class="stat-label" data-lang="en">Invoices</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-rupee-sign" style="color: var(--success); font-size: 18px;"></i>
+              <div class="stat-value" id="filteredInvoiceAmount">₹0</div>
+              <div class="stat-label" data-lang="hi">कुल रकम</div>
+              <div class="stat-label" data-lang="en">Total Amount</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-check-circle" style="color: #4caf50; font-size: 18px;"></i>
+              <div class="stat-value" id="filteredPaidAmount">₹0</div>
+              <div class="stat-label" data-lang="hi">पेड रकम</div>
+              <div class="stat-label" data-lang="en">Paid Amount</div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-clock" style="color: var(--warning); font-size: 18px;"></i>
+              <div class="stat-value" id="filteredPendingAmount">₹0</div>
+              <div class="stat-label" data-lang="hi">बकाया</div>
+              <div class="stat-label" data-lang="en">Pending</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+          <table class="compact-table">
+            <thead>
+              <tr>
+                <th width="10%" data-lang="hi">तारीख</th>
+                <th width="10%" data-lang="en">Date</th>
+                <th width="15%" data-lang="hi">इनवॉइस ID</th>
+                <th width="15%" data-lang="en">Invoice ID</th>
+                <th width="20%" data-lang="hi">कस्टमर</th>
+                <th width="20%" data-lang="en">Customer</th>
+                <th width="10%" data-lang="hi">रकम</th>
+                <th width="10%" data-lang="en">Amount</th>
+                <th width="10%" data-lang="hi">स्टेटस</th>
+                <th width="10%" data-lang="en">Status</th>
+                <th width="15%" data-lang="hi">एक्शन्स</th>
+                <th width="15%" data-lang="en">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invoicesTable"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 15px; text-align: center; color: #666; font-size: 13px;">
+          <span data-lang="hi">दिखा रहे हैं</span><span data-lang="en">Showing</span> <span id="invoiceCount">0</span> <span data-lang="hi">इनवॉइस</span><span data-lang="en">invoices</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Tab -->
+    <div id="admin" class="tab-content">
+      <div class="card">
+        <h3><i class="fas fa-user-shield"></i> <span data-lang="hi">एडमिन पैनल</span><span data-lang="en">Admin Panel</span></h3>
+        
+        <div class="form-row">
+          <div>
+            <label data-lang="hi">नया यूजरनेम</label>
+            <label data-lang="en">New Username</label>
+            <input type="text" id="newUsername" placeholder="" style="padding: 10px;">
+          </div>
+          <div>
+            <label data-lang="hi">पासवर्ड</label>
+            <label data-lang="en">Password</label>
+            <input type="password" id="newUserPassword" placeholder="" style="padding: 10px;">
+          </div>
+          <div>
+            <label data-lang="hi">यूजर रोल</label>
+            <label data-lang="en">User Role</label>
+            <select id="newUserRole" style="padding: 10px;">
+              <option value="user" data-lang="hi">यूजर</option>
+              <option value="user" data-lang="en">User</option>
+              <option value="admin" data-lang="hi">एडमिन</option>
+              <option value="admin" data-lang="en">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <button class="btn btn-success" onclick="createUser()">
+            <i class="fas fa-user-plus"></i> <span data-lang="hi">यूजर बनाएं</span><span data-lang="en">Create User</span>
+          </button>
+          <button class="btn btn-info" onclick="exportUsersPDF()">
+            <i class="fas fa-file-pdf"></i> <span data-lang="hi">यूजर्स एक्सपोर्ट</span><span data-lang="en">Export Users</span>
+          </button>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <h4 data-lang="hi">मौजूदा यूजर्स</h4>
+          <h4 data-lang="en">Existing Users</h4>
+          <div style="overflow-x: auto;">
+            <table class="compact-table">
+              <thead>
+                <tr>
+                  <th data-lang="hi">यूजरनेम</th>
+                  <th data-lang="en">Username</th>
+                  <th data-lang="hi">रोल</th>
+                  <th data-lang="en">Role</th>
+                  <th data-lang="hi">बनाया गया</th>
+                  <th data-lang="en">Created</th>
+                  <th data-lang="hi">एक्शन्स</th>
+                  <th data-lang="en">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Password Modal -->
+<div id="deletePasswordModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3><i class="fas fa-lock"></i> <span data-lang="hi">डिलीट करने के लिए पासवर्ड डालें</span><span data-lang="en">Enter Password to Delete</span></h3>
+        <div class="form-group">
+            <input type="password" id="deletePasswordInput" placeholder="पासवर्ड डालें" style="width: 100%; padding: 10px; margin: 10px 0;">
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn btn-primary" onclick="verifyDeletePassword()" style="flex: 1;">
+                <i class="fas fa-check"></i> <span data-lang="hi">वेरीफाई</span><span data-lang="en">Verify</span>
+            </button>
+            <button class="btn btn-warning" onclick="hideDeletePasswordModal()" style="flex: 1;">
+                <i class="fas fa-times"></i> <span data-lang="hi">कैंसल</span><span data-lang="en">Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Function Button -->
+<div class="copy-function">
+  <button class="btn btn-primary" onclick="copyFullCode()" style="padding: 10px 15px;">
+    <i class="fas fa-copy"></i> <span data-lang="hi">पूरा कोड कॉपी करें</span><span data-lang="en">Copy Full Code</span>
+  </button>
+
+</div>
+
+<!-- Your separated JS -->
+<script src="script.js"></script>
+</body>
+</html>
