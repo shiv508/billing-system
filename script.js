@@ -94,6 +94,13 @@ function getDateInputValue(dateInputId) {
   return formatDateForStorage(dateStr); // DD/MM/YYYY
 }
 
+// ===== PASSWORD PROTECTION =====
+function startDeleteInvoice(invoiceId) {
+  localStorage.setItem('pendingDeleteAction', 'invoice');
+  localStorage.setItem('pendingDeletedId', invoiceId);
+  showDeletePasswordModal();
+}
+
 // ========== DELETE PASSWORD PROTECTION FUNCTIONS ==========
 function showDeletePasswordModal() {
     document.getElementById('deletePasswordModal').style.display = 'flex';
